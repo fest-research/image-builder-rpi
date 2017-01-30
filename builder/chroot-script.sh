@@ -112,7 +112,7 @@ echo 'deb http://archive.raspberrypi.org/debian/ jessie main' | tee /etc/apt/sou
 
 # reload package sources
 apt-get update
-apt-get upgrade -y
+#apt-get upgrade -y
 
 # install WiFi firmware packages (same as in Raspbian)
 apt-get install -y \
@@ -191,6 +191,9 @@ apt-get install -y \
 
 # set up Docker APT repository and install docker-engine package
 #TODO: pin package version to ${DOCKER_ENGINE_VERSION}
+mkdir -p /etc/systemd/system/kubelet.service.d
+echo -e "[Service]\nExecStart=\nExecStart=/usr/bin/dockerd kenan test --storage-driver overlay -H fd://" \
+  > /etc/systemd/system/kubelet.service.d/overlay.conf
 curl -sSL https://get.docker.com | /bin/sh
 
 
