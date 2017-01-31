@@ -92,6 +92,7 @@ HYPRIOT_DEVICE="Raspberry Pi"
 DEST=$(readlink -m /etc/resolv.conf)
 export DEST
 mkdir -p "$(dirname "${DEST}")"
+
 echo "nameserver 8.8.8.8" > "${DEST}"
 
 # set up hypriot rpi repository for rpi specific kernel- and firmware-packages
@@ -110,9 +111,16 @@ get_gpg "${RPI_ORG_FPR}" "${RPI_ORG_KEY_URL}"
 
 echo 'deb http://archive.raspberrypi.org/debian/ jessie main' | tee /etc/apt/sources.list.d/raspberrypi.list
 
+# set up kubernetes binaries using the kubeadm guide
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+echo 'deb http://apt.kubernetes.io/ kubernetes-xenial main' | tee /etc/apt/sources.list.d/kubernetes.list
+
 # reload package sources
 apt-get update
-#apt-get upgrade -y
+apt-get upgrade -y
+
+echo "Installing k8s binaries"
+apt-get install -y kubelet kubectl kubernetes-cni
 
 # install WiFi firmware packages (same as in Raspbian)
 apt-get install -y \
@@ -129,6 +137,24 @@ apt-get install -y \
   "libraspberrypi0=${KERNEL_BUILD}" \
   "libraspberrypi-dev=${KERNEL_BUILD}" \
   "libraspberrypi-bin=${KERNEL_BUILD}"
+
+# ensure compatibility with Docker install.sh, so `raspbian` will be detected correctly
+apt-get install -y \
+  lsb-release
+
+# install hypriot packages for docker-tools
+apt-get install -y \
+  "docker-compose=${DOCKER_COMPOSE_VERSION}" \
+  "docker-machine=${DOCKER_MACHINE_VERSION}" \
+  "device-init=${DEVICE_INIT_VERSION}"
+
+# set up Docker APT repository and install docker-engine package
+#TODO: pin package version to ${DOCKER_ENGINE_VERSION}
+curl -sSL https://get.docker.com | /bin/sh
+
+echo "Installing rpi-serial-console script"
+wget -q https://raw.githubusercontent.com/lurch/rpi-serial-console/master/rpi-serial-console -O usr/local/bin/rpi-serial-console
+chmod +x usr/local/bin/rpi-serial-console
 
 # add user pirate to group video (for using the Raspberry Pi camera)
 usermod -a -G video pirate
@@ -178,28 +204,6 @@ apt-get install -y \
   --no-install-recommends \
   bluetooth \
   pi-bluetooth
-
-# ensure compatibility with Docker install.sh, so `raspbian` will be detected correctly
-apt-get install -y \
-  lsb-release
-
-# install hypriot packages for docker-tools
-apt-get install -y \
-  "docker-compose=${DOCKER_COMPOSE_VERSION}" \
-  "docker-machine=${DOCKER_MACHINE_VERSION}" \
-  "device-init=${DEVICE_INIT_VERSION}"
-
-# set up Docker APT repository and install docker-engine package
-#TODO: pin package version to ${DOCKER_ENGINE_VERSION}
-mkdir -p /etc/systemd/system/kubelet.service.d
-echo -e "[Service]\nExecStart=\nExecStart=/usr/bin/dockerd kenan test --storage-driver overlay -H fd://" \
-  > /etc/systemd/system/kubelet.service.d/overlay.conf
-curl -sSL https://get.docker.com | /bin/sh
-
-
-echo "Installing rpi-serial-console script"
-wget -q https://raw.githubusercontent.com/lurch/rpi-serial-console/master/rpi-serial-console -O usr/local/bin/rpi-serial-console
-chmod +x usr/local/bin/rpi-serial-console
 
 # cleanup APT cache and lists
 apt-get clean

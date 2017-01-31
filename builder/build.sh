@@ -34,7 +34,7 @@ mkdir ${BUILD_PATH}
 
 # download our base root file system
 if [ ! -f "${ROOTFS_TAR_PATH}" ]; then
-  wget -q -O "${ROOTFS_TAR_PATH}" "https://github.com/hypriot/os-rootfs/releases/download/${HYPRIOT_OS_VERSION}/${ROOTFS_TAR}"
+  wget -q -O "${ROOTFS_TAR_PATH}" "https://github.com/fest-research/image-builder-raw/releases/download/${HYPRIOT_OS_VERSION}/${ROOTFS_TAR}"
 fi
 
 # verify checksum of our root filesystem
@@ -87,9 +87,6 @@ if [ ! -f "${BUILD_RESULT_PATH}/${RAW_IMAGE}.zip" ]; then
   wget -q -O "${BUILD_RESULT_PATH}/${RAW_IMAGE}.zip" "https://github.com/hypriot/image-builder-raw/releases/download/${RAW_IMAGE_VERSION}/${RAW_IMAGE}.zip"
 fi
 
-# verify checksum of the ready-made raw image
-echo "${RAW_IMAGE_CHECKSUM} ${BUILD_RESULT_PATH}/${RAW_IMAGE}.zip" | sha256sum -c -
-
 unzip -p "${BUILD_RESULT_PATH}/${RAW_IMAGE}" > "/${HYPRIOT_IMAGE_NAME}"
 
 # create the image and add root base filesystem
@@ -111,4 +108,4 @@ zip "${BUILD_RESULT_PATH}/${HYPRIOT_IMAGE_NAME}.zip" "${HYPRIOT_IMAGE_NAME}"
 cd ${BUILD_RESULT_PATH} && sha256sum "${HYPRIOT_IMAGE_NAME}.zip" > "${HYPRIOT_IMAGE_NAME}.zip.sha256" && cd -
 
 # test sd-image that we have built
-#VERSION=${HYPRIOT_IMAGE_VERSION} rspec --format documentation --color ${BUILD_RESULT_PATH}/builder/test
+VERSION=${HYPRIOT_IMAGE_VERSION} rspec --format documentation --color ${BUILD_RESULT_PATH}/builder/test
