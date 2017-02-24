@@ -1,4 +1,4 @@
-#!/bin/bash
+at#!/bin/bash
 set -ex
 
 KEYSERVER="ha.pool.sks-keyservers.net"
@@ -147,6 +147,11 @@ apt-get install -y \
   "docker-compose=${DOCKER_COMPOSE_VERSION}" \
   "docker-machine=${DOCKER_MACHINE_VERSION}" \
   "device-init=${DEVICE_INIT_VERSION}"
+
+echo "Installing custom device-init"
+rm usr/local/bin/device-init
+wget -q https://github.com/fest-research/device-init/releases/download/0.2.0/device-init -O usr/local/bin/device-init
+chmod +x usr/local/bin/device-init
 
 # set up Docker APT repository and install docker-engine package
 #TODO: pin package version to ${DOCKER_ENGINE_VERSION}
